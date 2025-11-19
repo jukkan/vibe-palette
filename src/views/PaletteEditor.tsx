@@ -7,7 +7,8 @@
  * - Actions: save, save as copy, back
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { HexColorPicker } from 'react-colorful';
 import { VibePalette, VibeColor } from '../lib/paletteTypes';
 import { generateId } from '../lib/storage';
 import { normalizeHex, getColorBrightness } from '../lib/colorUtils';
@@ -33,6 +34,7 @@ export function PaletteEditor({
   onOpenExport,
 }: PaletteEditorProps) {
   const [editedPalette, setEditedPalette] = useState<VibePalette>(palette);
+  const [expandedPreview, setExpandedPreview] = useState(false);
   const { showToast } = useToast();
 
   // Update palette field
@@ -271,9 +273,14 @@ export function PaletteEditor({
 
         {/* Right: Preview panel */}
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <PreviewPanel palette={editedPalette} />
+          <PreviewPanel palette={editedPalette} onExpand={() => setExpandedPreview(true)} />
         </div>
       </div>
+
+      {/* Expanded preview modal */}
+      {expandedPreview && (
+        <ExpandedPreviewModal palette={editedPalette} onClose={() => setExpandedPreview(false)} />
+      )}
     </div>
   );
 }
@@ -303,6 +310,8 @@ function ColorRow({
   showToast,
 }: ColorRowProps) {
   const [hexInput, setHexInput] = useState(color.hex);
+  const [showPicker, setShowPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   // Handle hex blur (validation)
   const handleHexBlur = () => {
@@ -327,20 +336,61 @@ function ColorRow({
     }
   };
 
+  // Close picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setShowPicker(false);
+      }
+    }
+
+    if (showPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showPicker]);
+
   const brightness = getColorBrightness(color.hex);
 
   return (
     <div className="border border-gray-200 rounded-lg p-4">
       {/* Color swatch + hex */}
       <div className="flex gap-3 mb-3">
-        {/* Large swatch */}
-        <div
-          className="w-20 h-20 rounded-lg shadow-sm flex-shrink-0 flex items-center justify-center"
-          style={{ backgroundColor: color.hex }}
-        >
-          <span className={`text-xs font-mono ${brightness === 'light' ? 'text-gray-800' : 'text-white'}`}>
-            {color.hex}
-          </span>
+        {/* Large swatch with color picker */}
+        <div className="relative flex-shrink-0">
+          <div
+            className="w-20 h-20 rounded-lg shadow-sm flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+            style={{ backgroundColor: color.hex }}
+            onClick={() => setShowPicker(!showPicker)}
+            title="Click to open color picker"
+          >
+            <span className={`text-xs font-mono ${brightness === 'light' ? 'text-gray-800' : 'text-white'}`}>
+              {color.hex}
+            </span>
+          </div>
+
+          {/* Color picker popup */}
+          {showPicker && (
+            <div
+              ref={pickerRef}
+              className="absolute z-50 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 p-3"
+              style={{ left: 0, top: '100%' }}
+            >
+              <HexColorPicker
+                color={color.hex}
+                onChange={(newHex) => {
+                  onUpdate({ hex: newHex.toUpperCase() });
+                  setHexInput(newHex.toUpperCase());
+                }}
+              />
+              <button
+                onClick={() => setShowPicker(false)}
+                className="mt-2 w-full px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Inputs */}
@@ -431,7 +481,7 @@ function ColorRow({
 /**
  * Preview panel showing the palette in use
  */
-function PreviewPanel({ palette }: { palette: VibePalette }) {
+function PreviewPanel({ palette, onExpand }: { palette: VibePalette; onExpand: () => void }) {
   // Map colors by role
   const colorsByRole = {
     background: palette.colors.find((c) => c.role === 'background')?.hex || '#F9FAFB',
@@ -444,7 +494,15 @@ function PreviewPanel({ palette }: { palette: VibePalette }) {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-lg font-semibold mb-4">Preview</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Preview</h3>
+        <button
+          onClick={onExpand}
+          className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors"
+        >
+          Expand
+        </button>
+      </div>
 
       {!hasRoles && (
         <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded mb-4">
@@ -512,6 +570,242 @@ function PreviewPanel({ palette }: { palette: VibePalette }) {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Expanded preview modal - full screen view of the palette
+ */
+function ExpandedPreviewModal({ palette, onClose }: { palette: VibePalette; onClose: () => void }) {
+  // Map colors by role
+  const colorsByRole = {
+    background: palette.colors.find((c) => c.role === 'background')?.hex || '#F9FAFB',
+    text: palette.colors.find((c) => c.role === 'text')?.hex || '#111827',
+    primary: palette.colors.find((c) => c.role === 'primary')?.hex || '#3B82F6',
+    accent: palette.colors.find((c) => c.role === 'accent')?.hex || '#10B981',
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl w-full h-full max-w-7xl max-h-[95vh] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
+          <h2 className="text-xl font-semibold">Expanded Preview: {palette.name}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-8">
+          {/* Large color squares - no gaps */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Palette Colors</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-0 rounded-lg overflow-hidden shadow-lg">
+              {palette.colors.map((color) => {
+                const brightness = getColorBrightness(color.hex);
+                return (
+                  <div
+                    key={color.id}
+                    className="aspect-square flex flex-col items-center justify-center p-6"
+                    style={{ backgroundColor: color.hex }}
+                  >
+                    <span
+                      className={`font-mono text-2xl font-bold mb-2 ${
+                        brightness === 'light' ? 'text-gray-800' : 'text-white'
+                      }`}
+                    >
+                      {color.hex}
+                    </span>
+                    {color.label && (
+                      <span
+                        className={`text-lg ${brightness === 'light' ? 'text-gray-700' : 'text-white opacity-90'}`}
+                      >
+                        {color.label}
+                      </span>
+                    )}
+                    {color.role && color.role !== 'other' && (
+                      <span
+                        className={`text-sm mt-2 px-3 py-1 rounded-full ${
+                          brightness === 'light'
+                            ? 'bg-gray-800 text-white'
+                            : 'bg-white text-gray-800'
+                        }`}
+                      >
+                        {color.role}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Larger UI elements preview */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">UI Elements Preview</h3>
+            <div
+              className="rounded-lg p-12 min-h-[500px]"
+              style={{ backgroundColor: colorsByRole.background }}
+            >
+              <div className="bg-white rounded-lg shadow-xl p-10 space-y-6 max-w-4xl mx-auto">
+                <h4
+                  className="text-5xl font-bold mb-4"
+                  style={{ color: colorsByRole.text }}
+                >
+                  {palette.name}
+                </h4>
+
+                {palette.brand && (
+                  <p
+                    className="text-2xl"
+                    style={{ color: colorsByRole.text, opacity: 0.7 }}
+                  >
+                    {palette.brand}
+                  </p>
+                )}
+
+                <p
+                  className="text-xl leading-relaxed"
+                  style={{ color: colorsByRole.text, opacity: 0.8 }}
+                >
+                  This is a full-screen preview of your color palette. The large color squares above
+                  show how the colors work together without gaps. This view helps you see the
+                  relationships between colors more clearly.
+                </p>
+
+                <div className="flex gap-4 flex-wrap pt-4">
+                  <button
+                    className="px-8 py-4 rounded-lg font-semibold text-white shadow-lg text-xl"
+                    style={{ backgroundColor: colorsByRole.primary }}
+                  >
+                    Primary Button
+                  </button>
+
+                  <button
+                    className="px-8 py-4 rounded-lg font-semibold border-2 text-xl"
+                    style={{
+                      borderColor: colorsByRole.primary,
+                      color: colorsByRole.primary,
+                    }}
+                  >
+                    Secondary Button
+                  </button>
+
+                  <span
+                    className="px-6 py-3 rounded-full text-lg font-semibold text-white shadow-md"
+                    style={{ backgroundColor: colorsByRole.accent }}
+                  >
+                    Accent Tag
+                  </span>
+
+                  <a
+                    href="#"
+                    className="px-6 py-3 font-semibold underline text-xl"
+                    style={{ color: colorsByRole.accent }}
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    Link Element
+                  </a>
+                </div>
+
+                {/* Card examples */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                  <div
+                    className="p-6 rounded-lg shadow-md"
+                    style={{ backgroundColor: colorsByRole.background }}
+                  >
+                    <h5
+                      className="text-2xl font-bold mb-3"
+                      style={{ color: colorsByRole.text }}
+                    >
+                      Card Title
+                    </h5>
+                    <p
+                      className="text-lg"
+                      style={{ color: colorsByRole.text, opacity: 0.7 }}
+                    >
+                      Example card content using background color
+                    </p>
+                  </div>
+
+                  <div
+                    className="p-6 rounded-lg shadow-md border-2"
+                    style={{ borderColor: colorsByRole.accent }}
+                  >
+                    <h5
+                      className="text-2xl font-bold mb-3"
+                      style={{ color: colorsByRole.accent }}
+                    >
+                      Highlighted Card
+                    </h5>
+                    <p
+                      className="text-lg"
+                      style={{ color: colorsByRole.text, opacity: 0.7 }}
+                    >
+                      Card with accent border
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Color grid with labels */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Color Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {palette.colors.map((color) => {
+                const brightness = getColorBrightness(color.hex);
+                return (
+                  <div key={color.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div
+                      className="h-32 flex items-center justify-center"
+                      style={{ backgroundColor: color.hex }}
+                    >
+                      <span
+                        className={`font-mono text-xl font-bold ${
+                          brightness === 'light' ? 'text-gray-800' : 'text-white'
+                        }`}
+                      >
+                        {color.hex}
+                      </span>
+                    </div>
+                    <div className="p-4">
+                      <p className="font-semibold text-gray-900">
+                        {color.label || 'Unnamed Color'}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Role: {color.role || 'none'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          >
+            Close Preview
+          </button>
         </div>
       </div>
     </div>
