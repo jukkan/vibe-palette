@@ -178,6 +178,14 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: Pale
  * Individual palette card component
  */
 function PaletteCard({ palette, onClick }: { palette: VibePalette; onClick: () => void }) {
+  const { showToast } = useToast();
+
+  const handleColorClick = (e: React.MouseEvent, hex: string) => {
+    e.stopPropagation(); // Prevent card click
+    navigator.clipboard.writeText(hex);
+    showToast(`Copied ${hex} to clipboard`);
+  };
+
   return (
     <div
       onClick={onClick}
@@ -189,10 +197,30 @@ function PaletteCard({ palette, onClick }: { palette: VibePalette; onClick: () =
           palette.colors.map((color) => (
             <div
               key={color.id}
-              className="flex-1"
+              className="flex-1 relative group cursor-copy transition-all duration-200 hover:scale-110 hover:z-10"
               style={{ backgroundColor: color.hex }}
               title={color.label || color.hex}
-            />
+              onClick={(e) => handleColorClick(e, color.hex)}
+            >
+              {/* Copy icon - shown on hover */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <svg
+                  className="w-8 h-8 drop-shadow-lg"
+                  style={{ color: getContrastColor(color.hex) }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+            </div>
           ))
         ) : (
           <div className="flex-1 bg-gray-200 flex items-center justify-center text-gray-400">
@@ -218,6 +246,25 @@ function PaletteCard({ palette, onClick }: { palette: VibePalette; onClick: () =
       </div>
     </div>
   );
+}
+
+/**
+ * Calculate contrasting color (white or black) for text on a background
+ */
+function getContrastColor(hex: string): string {
+  // Remove # if present
+  const cleanHex = hex.replace('#', '');
+  
+  // Convert to RGB
+  const r = parseInt(cleanHex.substring(0, 2), 16);
+  const g = parseInt(cleanHex.substring(2, 4), 16);
+  const b = parseInt(cleanHex.substring(4, 6), 16);
+  
+  // Calculate relative luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return white for dark colors, black for light colors
+  return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
 
 /**
