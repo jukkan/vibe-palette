@@ -20,7 +20,11 @@ interface PaletteEditorProps {
   onSaveAsCopy: (palette: VibePalette) => void;
   onBack: () => void;
   onDelete?: (paletteId: string) => void;
-  onOpenShades: (color: VibeColor, onSelect: (hex: string) => void) => void;
+  onOpenShades: (
+    color: VibeColor, 
+    onSelect: (hex: string) => void,
+    onAddToPalette?: (hex: string) => void
+  ) => void;
   onOpenExport: (palette: VibePalette) => void;
 }
 
@@ -62,6 +66,22 @@ export function PaletteEditor({
     const newColor: VibeColor = {
       id: generateId(),
       hex: '#3B82F6',
+      label: '',
+      role: 'other',
+    };
+
+    setEditedPalette((prev) => ({
+      ...prev,
+      colors: [...prev.colors, newColor],
+      updatedAt: new Date().toISOString(),
+    }));
+  };
+
+  // Add color with specific hex (for adding from shades)
+  const addColorWithHex = (hex: string) => {
+    const newColor: VibeColor = {
+      id: generateId(),
+      hex: hex,
       label: '',
       role: 'other',
     };
@@ -189,91 +209,91 @@ export function PaletteEditor({
         </div>
       </div>
 
-      {/* Editor layout: left side (editor) + right side (preview) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left: Palette editor */}
-        <div>
+      {/* Editor layout: left side (details + preview) + right side (colors) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-6">
+        {/* Left: Palette details + Preview */}
+        <div className="space-y-6">
           {/* Palette metadata */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-4">Palette Details</h3>
+          <div className="bg-white rounded-lg shadow-md p-5">
+            <h3 className="text-lg font-semibold mb-3">Palette Details</h3>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700 w-16 flex-shrink-0">
                   Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={editedPalette.name}
                   onChange={(e) => updateField('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   placeholder="e.g., FinModeler G3"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700 w-16 flex-shrink-0">Brand</label>
                 <input
                   type="text"
                   value={editedPalette.brand || ''}
                   onChange={(e) => updateField('brand', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   placeholder="e.g., FinModeler"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <div className="flex items-start gap-3">
+                <label className="text-sm font-medium text-gray-700 w-16 flex-shrink-0 pt-1.5">Notes</label>
                 <textarea
                   value={editedPalette.notes || ''}
                   onChange={(e) => updateField('notes', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  rows={2}
                   placeholder="Optional notes about this palette..."
                 />
               </div>
             </div>
           </div>
 
-          {/* Color list */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Colors</h3>
-              <button
-                onClick={addColor}
-                className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-              >
-                + Add Color
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {editedPalette.colors.map((color, index) => (
-                <ColorRow
-                  key={color.id}
-                  color={color}
-                  isFirst={index === 0}
-                  isLast={index === editedPalette.colors.length - 1}
-                  onUpdate={(updates) => updateColor(color.id, updates)}
-                  onDelete={() => deleteColor(color.id)}
-                  onMove={(dir) => moveColor(color.id, dir)}
-                  onOpenShades={(onSelect) => onOpenShades(color, onSelect)}
-                  showToast={showToast}
-                />
-              ))}
-
-              {editedPalette.colors.length === 0 && (
-                <p className="text-gray-500 text-center py-8">
-                  No colors yet. Click "Add Color" to get started.
-                </p>
-              )}
-            </div>
+          {/* Preview panel */}
+          <div className="lg:sticky lg:top-6">
+            <PreviewPanel palette={editedPalette} onExpand={() => setExpandedPreview(true)} />
           </div>
         </div>
 
-        {/* Right: Preview panel */}
-        <div className="lg:sticky lg:top-6 lg:self-start">
-          <PreviewPanel palette={editedPalette} onExpand={() => setExpandedPreview(true)} />
+        {/* Right: Color list */}
+        <div className="bg-white rounded-lg shadow-md p-5 h-fit lg:sticky lg:top-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Colors</h3>
+            <button
+              onClick={addColor}
+              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
+              + Add Color
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {editedPalette.colors.map((color, index) => (
+              <ColorRow
+                key={color.id}
+                color={color}
+                isFirst={index === 0}
+                isLast={index === editedPalette.colors.length - 1}
+                onUpdate={(updates) => updateColor(color.id, updates)}
+                onDelete={() => deleteColor(color.id)}
+                onMove={(dir) => moveColor(color.id, dir)}
+                onOpenShades={(onSelect) => onOpenShades(color, onSelect, addColorWithHex)}
+                showToast={showToast}
+              />
+            ))}
+
+            {editedPalette.colors.length === 0 && (
+              <p className="text-gray-500 text-center py-8 text-sm">
+                No colors yet. Click "Add Color" to get started.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -353,21 +373,16 @@ function ColorRow({
   const brightness = getColorBrightness(color.hex);
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4">
-      {/* Color swatch + hex */}
-      <div className="flex gap-3 mb-3">
-        {/* Large swatch with color picker */}
+    <div className="border border-gray-200 rounded-lg p-3" style={{ backgroundColor: color.hex }}>
+      <div className="flex gap-2 mb-2">
+        {/* Compact swatch with color picker */}
         <div className="relative flex-shrink-0">
           <div
-            className="w-20 h-20 rounded-lg shadow-sm flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+            className="w-16 h-16 rounded-lg shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all border-2 border-white"
             style={{ backgroundColor: color.hex }}
             onClick={() => setShowPicker(!showPicker)}
             title="Click to open color picker"
-          >
-            <span className={`text-xs font-mono ${brightness === 'light' ? 'text-gray-800' : 'text-white'}`}>
-              {color.hex}
-            </span>
-          </div>
+          />
 
           {/* Color picker popup */}
           {showPicker && (
@@ -393,7 +408,7 @@ function ColorRow({
           )}
         </div>
 
-        {/* Inputs */}
+        {/* Hex and Label inputs side by side */}
         <div className="flex-1 space-y-2">
           <div className="flex gap-2">
             <input
@@ -401,78 +416,77 @@ function ColorRow({
               value={hexInput}
               onChange={(e) => setHexInput(e.target.value)}
               onBlur={handleHexBlur}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-24 px-2 py-1.5 border border-gray-300 rounded font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               placeholder="#RRGGBB"
+            />
+            <input
+              type="text"
+              value={color.label || ''}
+              onChange={(e) => onUpdate({ label: e.target.value })}
+              className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              placeholder="Label (e.g., Lemon Lime)"
             />
             <button
               onClick={copyHex}
-              className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors"
+              className="px-2 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-xs font-medium transition-colors bg-white"
               title="Copy hex to clipboard"
             >
               Copy
             </button>
           </div>
 
-          <input
-            type="text"
-            value={color.label || ''}
-            onChange={(e) => onUpdate({ label: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Label (e.g., Lemon Lime)"
-          />
+          {/* Role + Actions */}
+          <div className="flex gap-1.5 items-center">
+            <select
+              value={color.role || 'other'}
+              onChange={(e) =>
+                onUpdate({ role: e.target.value as VibeColor['role'] })
+              }
+              className="px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              <option value="primary">Primary</option>
+              <option value="accent">Accent</option>
+              <option value="background">Background</option>
+              <option value="text">Text</option>
+              <option value="other">Other</option>
+            </select>
+
+            <button
+              onClick={() => onOpenShades((hex) => onUpdate({ hex }))}
+              className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-xs font-medium transition-colors bg-white"
+            >
+              Shades
+            </button>
+
+            <div className="flex-1" />
+
+            <button
+              onClick={() => onMove('left')}
+              disabled={isFirst}
+              className="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-sm transition-colors"
+              title="Move left"
+            >
+              ←
+            </button>
+
+            <button
+              onClick={() => onMove('right')}
+              disabled={isLast}
+              className="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-sm transition-colors"
+              title="Move right"
+            >
+              →
+            </button>
+
+            <button
+              onClick={onDelete}
+              className="px-2 py-1 bg-white border border-red-300 rounded hover:bg-red-50 text-red-600 text-sm transition-colors"
+              title="Delete color"
+            >
+              🗑
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Role + Actions */}
-      <div className="flex gap-2 items-center">
-        <select
-          value={color.role || 'other'}
-          onChange={(e) =>
-            onUpdate({ role: e.target.value as VibeColor['role'] })
-          }
-          className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="primary">Primary</option>
-          <option value="accent">Accent</option>
-          <option value="background">Background</option>
-          <option value="text">Text</option>
-          <option value="other">Other</option>
-        </select>
-
-        <button
-          onClick={() => onOpenShades((hex) => onUpdate({ hex }))}
-          className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors"
-        >
-          Shades
-        </button>
-
-        <div className="flex-1" />
-
-        <button
-          onClick={() => onMove('left')}
-          disabled={isFirst}
-          className="px-2 py-1 text-gray-600 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Move left"
-        >
-          ←
-        </button>
-
-        <button
-          onClick={() => onMove('right')}
-          disabled={isLast}
-          className="px-2 py-1 text-gray-600 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Move right"
-        >
-          →
-        </button>
-
-        <button
-          onClick={onDelete}
-          className="px-2 py-1 text-red-600 hover:text-red-700"
-          title="Delete color"
-        >
-          🗑
-        </button>
       </div>
     </div>
   );
@@ -493,54 +507,54 @@ function PreviewPanel({ palette, onExpand }: { palette: VibePalette; onExpand: (
   const hasRoles = palette.colors.some((c) => c.role && c.role !== 'other');
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white rounded-lg shadow-md p-5">
+      <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-semibold">Preview</h3>
         <button
           onClick={onExpand}
-          className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors"
+          className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-xs font-medium transition-colors"
         >
           Expand
         </button>
       </div>
 
       {!hasRoles && (
-        <p className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded mb-4">
-          Assign roles to colors (primary, accent, background, text) for a better preview.
+        <p className="text-xs text-amber-600 bg-amber-50 px-2 py-1.5 rounded mb-3">
+          Assign roles to colors for a better preview.
         </p>
       )}
 
       {/* Preview area */}
       <div
-        className="rounded-lg p-8 min-h-96"
+        className="rounded-lg p-6"
         style={{ backgroundColor: colorsByRole.background }}
       >
-        <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
+        <div className="bg-white rounded-lg shadow-lg p-4 space-y-3">
           <h4
-            className="text-2xl font-bold"
+            className="text-xl font-bold"
             style={{ color: colorsByRole.text }}
           >
             {palette.name || 'Your Palette'}
           </h4>
 
           <p
-            className="text-sm"
+            className="text-xs leading-relaxed"
             style={{ color: colorsByRole.text, opacity: 0.7 }}
           >
             This is a preview of how your palette looks in a real UI. The background, text,
             buttons, and accents use colors based on their assigned roles.
           </p>
 
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             <button
-              className="px-4 py-2 rounded-lg font-medium text-white shadow-sm"
+              className="px-3 py-1.5 rounded-lg font-medium text-white shadow-sm text-xs"
               style={{ backgroundColor: colorsByRole.primary }}
             >
               Primary Button
             </button>
 
             <span
-              className="px-3 py-1 rounded-full text-sm font-medium text-white"
+              className="px-2 py-1 rounded-full text-xs font-medium text-white"
               style={{ backgroundColor: colorsByRole.accent }}
             >
               Tag
@@ -548,7 +562,7 @@ function PreviewPanel({ palette, onExpand }: { palette: VibePalette; onExpand: (
 
             <a
               href="#"
-              className="px-4 py-2 font-medium underline"
+              className="px-3 py-1.5 font-medium underline text-xs"
               style={{ color: colorsByRole.accent }}
               onClick={(e) => e.preventDefault()}
             >
@@ -557,13 +571,13 @@ function PreviewPanel({ palette, onExpand }: { palette: VibePalette; onExpand: (
           </div>
 
           {/* Show all colors */}
-          <div className="pt-4 border-t">
+          <div className="pt-3 border-t">
             <p className="text-xs text-gray-500 mb-2">All colors in palette:</p>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1.5 flex-wrap">
               {palette.colors.map((color) => (
                 <div
                   key={color.id}
-                  className="w-12 h-12 rounded shadow-sm"
+                  className="w-10 h-10 rounded shadow-sm"
                   style={{ backgroundColor: color.hex }}
                   title={color.label || color.hex}
                 />

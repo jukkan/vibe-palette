@@ -27,6 +27,7 @@ function App() {
   const [shadesModal, setShadesModal] = useState<{
     color: VibeColor;
     onSelect: (hex: string) => void;
+    onAddToPalette?: (hex: string) => void;
   } | null>(null);
   const [exportModal, setExportModal] = useState<VibePalette | null>(null);
 
@@ -106,7 +107,9 @@ function App() {
               onSaveAsCopy={handleSaveAsCopy}
               onBack={handleBack}
               onDelete={handleDeletePalette}
-              onOpenShades={(color, onSelect) => setShadesModal({ color, onSelect })}
+              onOpenShades={(color, onSelect, onAddToPalette) => 
+                setShadesModal({ color, onSelect, onAddToPalette })
+              }
               onOpenExport={setExportModal}
             />
           )}
@@ -118,6 +121,7 @@ function App() {
             color={shadesModal.color}
             onClose={() => setShadesModal(null)}
             onSelectShade={shadesModal.onSelect}
+            onAddToPalette={shadesModal.onAddToPalette}
           />
         )}
 

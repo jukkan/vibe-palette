@@ -13,9 +13,10 @@ interface ShadesModalProps {
   color: VibeColor;
   onClose: () => void;
   onSelectShade: (hex: string) => void;
+  onAddToPalette?: (hex: string) => void;
 }
 
-export function ShadesModal({ color, onClose, onSelectShade }: ShadesModalProps) {
+export function ShadesModal({ color, onClose, onSelectShade, onAddToPalette }: ShadesModalProps) {
   const { showToast } = useToast();
   const shades = generateShades(color.hex);
 
@@ -34,6 +35,13 @@ export function ShadesModal({ color, onClose, onSelectShade }: ShadesModalProps)
     onClose();
   };
 
+  const handleAddToPalette = (hex: string) => {
+    if (onAddToPalette) {
+      onAddToPalette(hex);
+      showToast(`Added ${hex} to palette`);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -48,7 +56,7 @@ export function ShadesModal({ color, onClose, onSelectShade }: ShadesModalProps)
           <div>
             <h2 className="text-xl font-semibold">Shades of {color.label || color.hex}</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Click a shade to copy, or use "Use this shade" to replace the original color
+              Click to copy, &quot;Use this shade&quot; to replace, or &quot;Add to palette&quot; to add as new color
             </p>
           </div>
           <button
@@ -80,6 +88,7 @@ export function ShadesModal({ color, onClose, onSelectShade }: ShadesModalProps)
               label={`Shade ${index + 1}`}
               onCopy={() => copyHex(shade)}
               onUse={() => handleUseShade(shade)}
+              onAddToPalette={onAddToPalette ? () => handleAddToPalette(shade) : undefined}
               showUseButton={shade !== color.hex}
             />
           ))}
@@ -97,10 +106,11 @@ interface ShadeRowProps {
   label: string;
   onCopy: () => void;
   onUse?: () => void;
+  onAddToPalette?: () => void;
   showUseButton?: boolean;
 }
 
-function ShadeRow({ hex, label, onCopy, onUse, showUseButton = false }: ShadeRowProps) {
+function ShadeRow({ hex, label, onCopy, onUse, onAddToPalette, showUseButton = false }: ShadeRowProps) {
   const brightness = getColorBrightness(hex);
 
   return (
@@ -137,6 +147,14 @@ function ShadeRow({ hex, label, onCopy, onUse, showUseButton = false }: ShadeRow
             className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
           >
             Use this shade
+          </button>
+        )}
+        {onAddToPalette && (
+          <button
+            onClick={onAddToPalette}
+            className="px-3 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium transition-colors"
+          >
+            Add to palette
           </button>
         )}
       </div>

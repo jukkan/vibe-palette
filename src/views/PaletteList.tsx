@@ -5,8 +5,10 @@
  * Each card displays the palette name, brand, and color stripes.
  */
 
+import { useState } from 'react';
 import { VibePalette } from '../lib/paletteTypes';
 import { generateId } from '../lib/storage';
+import { useToast } from '../components/Toast';
 
 interface PaletteListProps {
   palettes: VibePalette[];
@@ -15,6 +17,9 @@ interface PaletteListProps {
 }
 
 export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: PaletteListProps) {
+  const [showImportModal, setShowImportModal] = useState(false);
+  const { showToast } = useToast();
+
   const handleNewPalette = () => {
     const now = new Date().toISOString();
 
@@ -46,6 +51,54 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: Pale
     onCreatePalette(newPalette);
   };
 
+  const handleImport = (jsonText: string) => {
+    try {
+      const imported = JSON.parse(jsonText) as VibePalette;
+      
+      // Validate the imported data has required fields
+      if (!imported.name || !Array.isArray(imported.colors)) {
+        showToast('Invalid palette data');
+        return;
+      }
+
+      // Generate new IDs for the palette and colors
+      const now = new Date().toISOString();
+      const newPalette: VibePalette = {
+        ...imported,
+        id: generateId(),
+        colors: imported.colors.map(color => ({
+          ...color,
+          id: generateId(),
+        })),
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      onCreatePalette(newPalette);
+      setShowImportModal(false);
+      showToast('Palette imported successfully!');
+    } catch (err) {
+      showToast('Failed to import: Invalid JSON');
+    }
+  };
+
+  // Group palettes by brand
+  const groupedPalettes = palettes.reduce((groups, palette) => {
+    const brand = palette.brand || 'Uncategorized';
+    if (!groups[brand]) {
+      groups[brand] = [];
+    }
+    groups[brand].push(palette);
+    return groups;
+  }, {} as Record<string, VibePalette[]>);
+
+  // Sort brands alphabetically, but put Uncategorized last
+  const sortedBrands = Object.keys(groupedPalettes).sort((a, b) => {
+    if (a === 'Uncategorized') return 1;
+    if (b === 'Uncategorized') return -1;
+    return a.localeCompare(b);
+  });
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
@@ -57,24 +110,45 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: Pale
           </p>
         </div>
 
-        <button
-          onClick={handleNewPalette}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-        >
-          + New Palette
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Import
+          </button>
+          <button
+            onClick={handleNewPalette}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            + New Palette
+          </button>
+        </div>
       </div>
 
-      {/* Palette Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {palettes.map((palette) => (
-          <PaletteCard
-            key={palette.id}
-            palette={palette}
-            onClick={() => onSelectPalette(palette.id)}
-          />
-        ))}
-      </div>
+      {/* Grouped Palettes */}
+      {sortedBrands.map((brand) => (
+        <div key={brand} className="mb-10">
+          {/* Brand Header */}
+          <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            {brand}
+            <span className="text-sm font-normal text-gray-500">
+              ({groupedPalettes[brand].length})
+            </span>
+          </h3>
+          
+          {/* Palette Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {groupedPalettes[brand].map((palette) => (
+              <PaletteCard
+                key={palette.id}
+                palette={palette}
+                onClick={() => onSelectPalette(palette.id)}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
 
       {/* Empty state */}
       {palettes.length === 0 && (
@@ -87,6 +161,14 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: Pale
             Create Your First Palette
           </button>
         </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <ImportModal
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImport}
+        />
       )}
     </div>
   );
@@ -122,10 +204,83 @@ function PaletteCard({ palette, onClick }: { palette: VibePalette; onClick: () =
       {/* Card content */}
       <div className="p-4">
         <h3 className="font-semibold text-lg text-gray-900 truncate">{palette.name}</h3>
-        {palette.brand && <p className="text-sm text-gray-600 mt-1 truncate">{palette.brand}</p>}
+        {palette.brand && (
+          <span className="inline-block px-2 py-1 mt-2 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+            {palette.brand}
+          </span>
+        )}
+        {palette.notes && (
+          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{palette.notes}</p>
+        )}
         <p className="text-xs text-gray-500 mt-2">
           {palette.colors.length} {palette.colors.length === 1 ? 'color' : 'colors'}
         </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Import modal component
+ */
+function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (json: string) => void }) {
+  const [jsonText, setJsonText] = useState('');
+
+  const handleImport = () => {
+    if (jsonText.trim()) {
+      onImport(jsonText);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="border-b px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Import Palette</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">
+          <p className="text-sm text-gray-600 mb-3">
+            Paste the JSON content from an exported palette below:
+          </p>
+          <textarea
+            value={jsonText}
+            onChange={(e) => setJsonText(e.target.value)}
+            className="w-full h-96 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder='{"id": "...", "name": "My Palette", ...}'
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="border-t px-6 py-4 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleImport}
+            disabled={!jsonText.trim()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Import Palette
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ interface ExportModalProps {
 }
 
 export function ExportModal({ palette, onClose }: ExportModalProps) {
-  const [activeTab, setActiveTab] = useState<'json' | 'text'>('json');
+  const [activeTab, setActiveTab] = useState<'json' | 'text' | 'css'>('json');
   const { showToast } = useToast();
 
   // Generate JSON export
@@ -24,6 +24,9 @@ export function ExportModal({ palette, onClose }: ExportModalProps) {
 
   // Generate chat text export
   const textExport = generateChatText(palette);
+
+  // Generate CSS export
+  const cssExport = generateCSS(palette);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -77,6 +80,16 @@ export function ExportModal({ palette, onClose }: ExportModalProps) {
             >
               Chat Text
             </button>
+            <button
+              onClick={() => setActiveTab('css')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === 'css'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              CSS
+            </button>
           </div>
         </div>
 
@@ -91,7 +104,7 @@ export function ExportModal({ palette, onClose }: ExportModalProps) {
                 {jsonExport}
               </pre>
             </div>
-          ) : (
+          ) : activeTab === 'text' ? (
             <div>
               <p className="text-sm text-gray-600 mb-3">
                 Human-readable description perfect for pasting into AI prompts or design briefs.
@@ -99,6 +112,15 @@ export function ExportModal({ palette, onClose }: ExportModalProps) {
               <div className="bg-gray-50 p-4 rounded-lg text-sm border border-gray-200 whitespace-pre-wrap">
                 {textExport}
               </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-gray-600 mb-3">
+                CSS custom properties ready to paste into your stylesheet.
+              </p>
+              <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-auto font-mono border border-gray-200">
+                {cssExport}
+              </pre>
             </div>
           )}
         </div>
@@ -114,13 +136,13 @@ export function ExportModal({ palette, onClose }: ExportModalProps) {
           <button
             onClick={() =>
               copyToClipboard(
-                activeTab === 'json' ? jsonExport : textExport,
-                activeTab === 'json' ? 'JSON' : 'text'
+                activeTab === 'json' ? jsonExport : activeTab === 'text' ? textExport : cssExport,
+                activeTab === 'json' ? 'JSON' : activeTab === 'text' ? 'text' : 'CSS'
               )
             }
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
           >
-            Copy {activeTab === 'json' ? 'JSON' : 'Text'}
+            Copy {activeTab === 'json' ? 'JSON' : activeTab === 'text' ? 'Text' : 'CSS'}
           </button>
         </div>
       </div>
@@ -165,4 +187,41 @@ function generateChatText(palette: VibePalette): string {
   }
 
   return parts.join(' ');
+}
+
+/**
+ * Generates CSS custom properties for a palette
+ */
+function generateCSS(palette: VibePalette): string {
+  const lines: string[] = [];
+  
+  // Add a descriptive comment
+  lines.push(`/* ${palette.name} */`);
+  if (palette.brand) {
+    lines.push(`/* Brand: ${palette.brand} */`);
+  }
+  lines.push(':root {');
+  
+  // Generate CSS variables for each color
+  palette.colors.forEach((color, index) => {
+    // Create variable name based on label or role
+    let varName: string;
+    
+    if (color.label) {
+      // Convert label to kebab-case
+      varName = color.label.toLowerCase().replace(/\s+/g, '-');
+    } else if (color.role && color.role !== 'other') {
+      // Use role as variable name
+      varName = color.role;
+    } else {
+      // Fallback to color-1, color-2, etc.
+      varName = `color-${index + 1}`;
+    }
+    
+    lines.push(`  --${varName}: ${color.hex};`);
+  });
+  
+  lines.push('}');
+  
+  return lines.join('\n');
 }
