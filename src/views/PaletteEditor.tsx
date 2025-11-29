@@ -370,8 +370,6 @@ function ColorRow({
     }
   }, [showPicker]);
 
-  const brightness = getColorBrightness(color.hex);
-
   return (
     <div className="border border-gray-200 rounded-lg p-3" style={{ backgroundColor: color.hex }}>
       <div className="flex gap-2 mb-2">
