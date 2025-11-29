@@ -5,19 +5,21 @@
  * Each card displays the palette name, brand, and color stripes.
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { VibePalette } from '../lib/paletteTypes';
-import { generateId } from '../lib/storage';
+import { generateId, exportBackup, importBackup } from '../lib/storage';
 import { useToast } from '../components/Toast';
 
 interface PaletteListProps {
   palettes: VibePalette[];
   onSelectPalette: (paletteId: string) => void;
   onCreatePalette: (palette: VibePalette) => void;
+  onRestoreBackup: (palettes: VibePalette[]) => void;
 }
 
-export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: PaletteListProps) {
+export function PaletteList({ palettes, onSelectPalette, onCreatePalette, onRestoreBackup }: PaletteListProps) {
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
   const { showToast } = useToast();
 
   const handleNewPalette = () => {
@@ -82,6 +84,26 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: Pale
     }
   };
 
+  const handleBackup = () => {
+    try {
+      exportBackup();
+      showToast('Backup downloaded!');
+    } catch (err) {
+      showToast('Failed to create backup');
+    }
+  };
+
+  const handleRestore = (jsonContent: string) => {
+    try {
+      const restored = importBackup(jsonContent);
+      onRestoreBackup(restored);
+      setShowRestoreModal(false);
+      showToast(`Restored ${restored.length} palette${restored.length === 1 ? '' : 's'}!`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to restore backup');
+    }
+  };
+
   // Group palettes by brand
   const groupedPalettes = palettes.reduce((groups, palette) => {
     const brand = palette.brand || 'Uncategorized';
@@ -112,8 +134,22 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: Pale
 
         <div className="flex gap-2">
           <button
+            onClick={handleBackup}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+            title="Download all palettes as a backup file"
+          >
+            Backup
+          </button>
+          <button
+            onClick={() => setShowRestoreModal(true)}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+            title="Restore palettes from a backup file"
+          >
+            Restore
+          </button>
+          <button
             onClick={() => setShowImportModal(true)}
-            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
           >
             Import
           </button>
@@ -168,6 +204,14 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette }: Pale
         <ImportModal
           onClose={() => setShowImportModal(false)}
           onImport={handleImport}
+        />
+      )}
+
+      {/* Restore Modal */}
+      {showRestoreModal && (
+        <RestoreModal
+          onClose={() => setShowRestoreModal(false)}
+          onRestore={handleRestore}
         />
       )}
     </div>
@@ -326,6 +370,115 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (js
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Import Palette
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Restore modal component for importing backup files
+ */
+function RestoreModal({ onClose, onRestore }: { onClose: () => void; onRestore: (json: string) => void }) {
+  const [jsonText, setJsonText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRestore = () => {
+    if (jsonText.trim()) {
+      onRestore(jsonText);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result;
+        if (typeof content === 'string') {
+          setJsonText(content);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="border-b px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Restore from Backup</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-yellow-800">
+              <strong>Warning:</strong> Restoring from a backup will replace all your current palettes. 
+              Make sure to backup your current palettes first if you want to keep them.
+            </p>
+          </div>
+          
+          <div className="mb-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-lg p-8 text-center transition-colors"
+            >
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p className="mt-2 text-sm text-gray-600">
+                Click to select a backup file
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                or paste the JSON content below
+              </p>
+            </button>
+          </div>
+
+          <textarea
+            value={jsonText}
+            onChange={(e) => setJsonText(e.target.value)}
+            className="w-full h-48 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Paste backup JSON content here..."
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="border-t px-6 py-4 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleRestore}
+            disabled={!jsonText.trim()}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Restore Backup
           </button>
         </div>
       </div>

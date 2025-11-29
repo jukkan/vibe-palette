@@ -75,6 +75,13 @@ function App() {
     setSelectedPaletteId(null);
   };
 
+  const handleRestoreBackup = (restoredPalettes: VibePalette[]) => {
+    setPalettes(restoredPalettes);
+    savePalettes(restoredPalettes);
+    setCurrentView('list');
+    setSelectedPaletteId(null);
+  };
+
   const handleBack = () => {
     setCurrentView('list');
     setSelectedPaletteId(null);
@@ -97,6 +104,7 @@ function App() {
               palettes={palettes}
               onSelectPalette={handleSelectPalette}
               onCreatePalette={handleCreatePalette}
+              onRestoreBackup={handleRestoreBackup}
             />
           )}
 

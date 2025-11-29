@@ -114,3 +114,53 @@ export function savePalettes(palettes: VibePalette[]): void {
 export function clearPalettes(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
+
+/**
+ * Exports all palettes as a JSON backup file
+ */
+export function exportBackup(): void {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  const data = stored || '[]';
+  
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const date = new Date().toISOString().split('T')[0];
+  const filename = `vibe-palettes-backup-${date}.json`;
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Validates and imports a backup file
+ * Returns the imported palettes if valid, throws an error otherwise
+ */
+export function importBackup(jsonContent: string): VibePalette[] {
+  const parsed = JSON.parse(jsonContent);
+  
+  // Validate it's an array
+  if (!Array.isArray(parsed)) {
+    throw new Error('Invalid backup format: expected an array of palettes');
+  }
+  
+  // Validate each palette has required fields
+  for (const palette of parsed) {
+    if (typeof palette !== 'object' || palette === null) {
+      throw new Error('Invalid backup format: each item must be a palette object');
+    }
+    if (typeof palette.id !== 'string' || typeof palette.name !== 'string') {
+      throw new Error('Invalid backup format: each palette must have an id and name');
+    }
+    if (!Array.isArray(palette.colors)) {
+      throw new Error('Invalid backup format: each palette must have a colors array');
+    }
+  }
+  
+  return parsed as VibePalette[];
+}
