@@ -379,6 +379,13 @@ function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (js
 
 /**
  * Restore modal component for importing backup files
+ * 
+ * Allows users to restore all palettes from a backup file by either:
+ * - Clicking to select a .json backup file from their device
+ * - Pasting the backup JSON content directly into the textarea
+ * 
+ * @param onClose - Callback when the modal is closed
+ * @param onRestore - Callback with the JSON content when restore is confirmed
  */
 function RestoreModal({ onClose, onRestore }: { onClose: () => void; onRestore: (json: string) => void }) {
   const [jsonText, setJsonText] = useState('');

@@ -142,7 +142,12 @@ export function exportBackup(): void {
  * Returns the imported palettes if valid, throws an error otherwise
  */
 export function importBackup(jsonContent: string): VibePalette[] {
-  const parsed = JSON.parse(jsonContent);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonContent);
+  } catch {
+    throw new Error('Invalid JSON format: please check your backup file');
+  }
   
   // Validate it's an array
   if (!Array.isArray(parsed)) {
