@@ -171,38 +171,38 @@ export function PaletteEditor({
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <button
           onClick={onBack}
-          className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
+          className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 text-sm sm:text-base"
         >
-          ← Back to Palettes
+          ← Back
         </button>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {onDelete && (
             <button
               onClick={handleDelete}
-              className="px-4 py-2 text-red-600 hover:text-red-700 font-medium transition-colors"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 text-red-600 hover:text-red-700 font-medium transition-colors text-sm"
             >
               Delete
             </button>
           )}
           <button
             onClick={() => onOpenExport(editedPalette)}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors text-sm"
           >
             Export
           </button>
           <button
             onClick={handleSaveAsCopy}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors text-sm"
           >
-            Save as Copy
+            Copy
           </button>
           <button
             onClick={handleSave}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 sm:px-6 sm:py-2 rounded-lg font-medium transition-colors text-sm"
           >
             Save
           </button>
@@ -371,12 +371,12 @@ function ColorRow({
   }, [showPicker]);
 
   return (
-    <div className="border border-gray-200 rounded-lg p-3" style={{ backgroundColor: color.hex }}>
-      <div className="flex gap-2 mb-2">
+    <div className="border border-gray-200 rounded-lg p-2 sm:p-3" style={{ backgroundColor: color.hex }}>
+      <div className="flex gap-2">
         {/* Compact swatch with color picker */}
         <div className="relative flex-shrink-0">
           <div
-            className="w-16 h-16 rounded-lg shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all border-2 border-white"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg shadow-sm cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all border-2 border-white"
             style={{ backgroundColor: color.hex }}
             onClick={() => setShowPicker(!showPicker)}
             title="Click to open color picker"
@@ -406,41 +406,35 @@ function ColorRow({
           )}
         </div>
 
-        {/* Hex and Label inputs side by side */}
-        <div className="flex-1 space-y-2">
-          <div className="flex gap-2">
+        {/* Inputs and actions */}
+        <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
+          {/* Hex and Label inputs */}
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <input
               type="text"
               value={hexInput}
               onChange={(e) => setHexInput(e.target.value)}
               onBlur={handleHexBlur}
-              className="w-24 px-2 py-1.5 border border-gray-300 rounded font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-20 sm:w-24 px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-300 rounded font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               placeholder="#RRGGBB"
             />
             <input
               type="text"
               value={color.label || ''}
               onChange={(e) => onUpdate({ label: e.target.value })}
-              className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              placeholder="Label (e.g., Lemon Lime)"
+              className="flex-1 min-w-[80px] px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              placeholder="Label (e.g., Blue)"
             />
-            <button
-              onClick={copyHex}
-              className="px-2 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-xs font-medium transition-colors bg-white"
-              title="Copy hex to clipboard"
-            >
-              Copy
-            </button>
           </div>
 
           {/* Role + Actions */}
-          <div className="flex gap-1.5 items-center">
+          <div className="flex flex-wrap gap-1 sm:gap-1.5 items-center">
             <select
               value={color.role || 'other'}
               onChange={(e) =>
                 onUpdate({ role: e.target.value as VibeColor['role'] })
               }
-              className="px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="px-1.5 sm:px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="primary">Primary</option>
               <option value="accent">Accent</option>
@@ -450,18 +444,26 @@ function ColorRow({
             </select>
 
             <button
+              onClick={copyHex}
+              className="px-1.5 sm:px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-xs font-medium transition-colors bg-white"
+              title="Copy hex to clipboard"
+            >
+              Copy
+            </button>
+
+            <button
               onClick={() => onOpenShades((hex) => onUpdate({ hex }))}
-              className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-xs font-medium transition-colors bg-white"
+              className="px-1.5 sm:px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-xs font-medium transition-colors bg-white"
             >
               Shades
             </button>
 
-            <div className="flex-1" />
+            <div className="flex-1" /> {/* Spacer to push move/delete buttons to the right */}
 
             <button
               onClick={() => onMove('left')}
               disabled={isFirst}
-              className="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-sm transition-colors"
+              className="px-1.5 sm:px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-xs sm:text-sm transition-colors"
               title="Move left"
             >
               ←
@@ -470,7 +472,7 @@ function ColorRow({
             <button
               onClick={() => onMove('right')}
               disabled={isLast}
-              className="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-sm transition-colors"
+              className="px-1.5 sm:px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-xs sm:text-sm transition-colors"
               title="Move right"
             >
               →
@@ -478,7 +480,7 @@ function ColorRow({
 
             <button
               onClick={onDelete}
-              className="px-2 py-1 bg-white border border-red-300 rounded hover:bg-red-50 text-red-600 text-sm transition-colors"
+              className="px-1.5 sm:px-2 py-1 bg-white border border-red-300 rounded hover:bg-red-50 text-red-600 text-xs sm:text-sm transition-colors"
               title="Delete color"
             >
               🗑
