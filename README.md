@@ -1,27 +1,46 @@
 # Vibe Palettes
 
-A minimal, focused color palette manager built for marketers and non-designers who need a simple tool to manage brand colors for websites, slide decks, thumbnails, and social graphics.
+A minimal, focused color palette manager for marketers and non-designers who need a simple tool to manage brand colors.
 
-Inspired by Coolors but stripped down to just the essentials you actually need.
+Create and organize color palettes for websites, slide decks, thumbnails, and social graphics—without the complexity of professional design tools.
 
-## Features
+## What It Looks Like
 
-- **Simple palette management**: Create, edit, and organize color palettes
-- **Color roles**: Assign semantic roles (primary, accent, background, text) to colors
-- **Shade generator**: Explore light and dark variations of any color
-- **Live preview**: See how your palette looks in real UI elements
-- **Export options**: Export as JSON or human-readable text for AI prompts
-- **No backend required**: All data stored in localStorage
-- **Responsive design**: Works on laptop and tablet
+### Create and Edit Palettes with Live Preview
 
-## Tech Stack
+![Palette Editor](docs/screenshots/palette-editor.png)
 
-- **Vite** - Fast build tool and dev server
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first styling
+Edit your colors with a visual color picker, generate shades, assign semantic roles (primary, accent, background, text), and see a live preview of how your palette looks in real UI elements.
+
+### Organize Your Palettes by Brand
+
+![Palette List](docs/screenshots/palette-list.png)
+
+Group palettes by brand or project. Quickly browse all your color schemes in one place with backup/restore functionality.
+
+## Key Features
+
+✨ **Visual Color Editing** - Pick colors with an intuitive color picker and see instant previews
+
+🎨 **Automatic Shade Generation** - Generate light and dark variations of any color with one click
+
+👁️ **Live UI Preview** - See how your palette looks in buttons, tags, links, and backgrounds
+
+🏷️ **Semantic Color Roles** - Assign roles (primary, accent, background, text) for better organization
+
+📁 **Brand Organization** - Group palettes by brand or project for easy management
+
+💾 **Backup & Restore** - Export and import your entire palette collection
+
+📋 **Export Options** - Export as JSON or human-readable text for AI prompts
+
+🚀 **No Backend Required** - Everything runs in your browser with localStorage
+
+📱 **Responsive Design** - Works seamlessly on laptop and tablet
 
 ## Getting Started
+
+Try it now! The app runs entirely in your browser—no signup or backend required.
 
 ### Install dependencies
 
@@ -51,6 +70,35 @@ The production build will be in the `dist` folder.
 npm run preview
 ```
 
+## How to Use
+
+### Creating Your First Palette
+
+1. Click **+ New** on the palette list page
+2. Choose a base color—the app will generate 5 harmonious colors automatically
+3. Edit colors, assign roles, and see the live preview update instantly
+4. Click **Save** when you're done
+
+### Organizing Palettes
+
+- **Brand field**: Group related palettes (e.g., "ClientName" or "Project2024")
+- **Notes**: Add context like "Summer campaign" or "Website redesign"
+- The list view automatically groups palettes by brand
+
+### Working with Colors
+
+- **Color Picker**: Click the color swatch to open a visual picker
+- **Generate Shades**: Click "Shades" to explore 12+ variations from light to dark
+- **Copy Colors**: Click "Copy" next to any color to copy the hex code
+- **Reorder**: Use arrow buttons to change the color order
+- **Color Roles**: Assign semantic roles to see accurate previews
+
+### Exporting
+
+- **JSON**: Structured data for programmatic use
+- **Chat Text**: Human-readable format perfect for pasting into AI prompts
+- **Backup/Restore**: Export all palettes at once from the main list view
+
 ## How It Works
 
 ### Data Storage
@@ -74,7 +122,16 @@ If you want to start fresh and clear all palettes:
 
 The app will recreate the default example palette.
 
-## Project Structure
+## Tech Stack
+
+- **React 18** + **TypeScript** for type-safe UI development
+- **Vite** for fast builds and dev experience
+- **Tailwind CSS** for utility-first styling
+- **localStorage** for client-side data persistence
+
+## For Developers
+
+### Project Structure
 
 ```
 vibe-palette/
@@ -99,45 +156,12 @@ vibe-palette/
 └── tsconfig.json
 ```
 
-## Key Components
+### Key Components
 
-### PaletteList
-- Displays all palettes as cards in a responsive grid
-- Each card shows color stripes and palette metadata
-- "New Palette" button opens a modal to create a palette with a base color and generates 5 harmonious colors
-
-### PaletteEditor
-- **Left panel**: Palette metadata and color list
-- **Right panel**: Live preview of the palette in use
-- Edit color hex values, labels, and roles
-- Reorder colors with left/right arrows
-- Delete individual colors
-- "Shades" button opens the shade explorer
-- "Export" button opens export options
-
-### ShadesModal
-- Generates ~12 shades of a color from light to dark
-- Click to copy hex value
-- "Use this shade" button replaces the original color
-
-### ExportModal
-- **JSON tab**: Structured data for programmatic use
-- **Chat text tab**: Human-readable description for AI prompts
-
-## Usage Tips
-
-1. **Assign roles**: Set color roles (primary, accent, background, text) to see a more accurate preview
-2. **Clone palettes**: Use "Save as Copy" to create variations
-3. **Explore shades**: Use the shade generator to find lighter/darker versions
-4. **Export for AI**: Use the "Chat text" export to quickly describe your palette in AI prompts
-
-## Browser Compatibility
-
-Works in all modern browsers that support:
-- ES2020
-- localStorage
-- CSS Grid
-- CSS Custom Properties
+- **PaletteList**: Displays all palettes as cards, grouped by brand
+- **PaletteEditor**: Split view with metadata/colors on left, live preview on right
+- **ShadesModal**: Interactive shade generator with ~12 variations per color
+- **ExportModal**: Export palettes as JSON or human-readable text
 
 ## License
 
