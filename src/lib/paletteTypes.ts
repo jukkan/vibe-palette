@@ -1,5 +1,5 @@
 /**
- * Type definitions for Vibe Palettes
+ * Type definitions for Vibe Palette
  *
  * This file contains all the TypeScript interfaces and types
  * used throughout the application.

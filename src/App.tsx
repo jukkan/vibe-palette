@@ -132,7 +132,7 @@ function App() {
               className="text-2xl font-bold"
               style={{ color: headerStyle.textColor }}
             >
-              Vibe Palettes
+              Vibe Palette
             </h1>
 
             {/* GitHub Link */}
