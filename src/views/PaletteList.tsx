@@ -124,7 +124,7 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette, onRest
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Your Palettes</h2>
           <p className="text-gray-600 mt-1">
@@ -132,32 +132,32 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette, onRest
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={handleBackup}
-            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
             title="Download all palettes as a backup file"
           >
             Backup
           </button>
           <button
             onClick={() => setShowRestoreModal(true)}
-            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
             title="Restore palettes from a backup file"
           >
             Restore
           </button>
           <button
             onClick={() => setShowImportModal(true)}
-            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors"
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
           >
             Import
           </button>
           <button
             onClick={handleNewPalette}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
           >
-            + New Palette
+            + New
           </button>
         </div>
       </div>

@@ -114,47 +114,50 @@ function ShadeRow({ hex, label, onCopy, onUse, onAddToPalette, showUseButton = f
   const brightness = getColorBrightness(hex);
 
   return (
-    <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-      {/* Swatch */}
-      <div
-        className="w-20 h-12 rounded shadow-sm flex items-center justify-center cursor-pointer"
-        style={{ backgroundColor: hex }}
-        onClick={onCopy}
-        title="Click to copy"
-      >
-        <span className={`text-xs font-mono ${brightness === 'light' ? 'text-gray-800' : 'text-white'}`}>
-          {hex}
-        </span>
-      </div>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+      {/* Top row: Swatch and info */}
+      <div className="flex items-center gap-3 flex-1">
+        {/* Swatch */}
+        <div
+          className="w-16 sm:w-20 h-10 sm:h-12 rounded shadow-sm flex items-center justify-center cursor-pointer flex-shrink-0"
+          style={{ backgroundColor: hex }}
+          onClick={onCopy}
+          title="Click to copy"
+        >
+          <span className={`text-xs font-mono ${brightness === 'light' ? 'text-gray-800' : 'text-white'}`}>
+            {hex}
+          </span>
+        </div>
 
-      {/* Info */}
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-900">{hex}</p>
-        <p className="text-xs text-gray-500">{label}</p>
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900">{hex}</p>
+          <p className="text-xs text-gray-500">{label}</p>
+        </div>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2 ml-0 sm:ml-auto">
         <button
           onClick={onCopy}
-          className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium transition-colors"
+          className="px-2.5 py-1 sm:px-3 sm:py-1.5 border border-gray-300 rounded hover:bg-gray-50 text-xs sm:text-sm font-medium transition-colors"
         >
           Copy
         </button>
         {showUseButton && onUse && (
           <button
             onClick={onUse}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
+            className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs sm:text-sm font-medium transition-colors"
           >
-            Use this shade
+            Use
           </button>
         )}
         {onAddToPalette && (
           <button
             onClick={onAddToPalette}
-            className="px-3 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium transition-colors"
+            className="px-2.5 py-1 sm:px-3 sm:py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded text-xs sm:text-sm font-medium transition-colors"
           >
-            Add to palette
+            Add
           </button>
         )}
       </div>
