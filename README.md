@@ -57,7 +57,7 @@ npm run preview
 
 All palettes are stored in your browser's localStorage under the key `"vibe-palettes-v1"`.
 
-- **First time**: The app creates a default example palette (FinModeler G3) to get you started
+- **First time**: The app creates a default example palette to get you started
 - **Persistence**: Your palettes are saved automatically whenever you make changes
 - **No cloud sync**: Everything stays in your browser
 
@@ -104,7 +104,7 @@ vibe-palette/
 ### PaletteList
 - Displays all palettes as cards in a responsive grid
 - Each card shows color stripes and palette metadata
-- "New Palette" button creates a new palette (clones the last one by default)
+- "New Palette" button opens a modal to create a palette with a base color and generates 5 harmonious colors
 
 ### PaletteEditor
 - **Left panel**: Palette metadata and color list

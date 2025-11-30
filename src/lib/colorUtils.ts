@@ -176,3 +176,60 @@ export function getColorBrightness(hex: string): 'light' | 'dark' {
 
   return luminance > 0.5 ? 'light' : 'dark';
 }
+
+/**
+ * Generates a harmonious 5-color palette from a base color
+ * Returns an array of 5 hex colors with suggested roles
+ */
+export function generatePaletteFromBase(
+  baseHex: string
+): Array<{ hex: string; label: string; role: 'primary' | 'accent' | 'background' | 'text' | 'other' }> {
+  const rgb = hexToRgb(baseHex);
+  if (!rgb) {
+    // Fallback to a default blue palette if invalid
+    return [
+      { hex: '#3B82F6', label: 'Primary', role: 'primary' },
+      { hex: '#10B981', label: 'Accent', role: 'accent' },
+      { hex: '#F9FAFB', label: 'Light Background', role: 'background' },
+      { hex: '#1F2937', label: 'Dark Text', role: 'text' },
+      { hex: '#6366F1', label: 'Secondary', role: 'other' },
+    ];
+  }
+
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+  // 1. Primary: The base color itself
+  const primary = baseHex;
+
+  // 2. Accent: Complementary color (opposite on color wheel, 180° hue shift)
+  const accentHsl = { h: (hsl.h + 180) % 360, s: hsl.s, l: hsl.l };
+  const accentRgb = hslToRgb(accentHsl.h, accentHsl.s, accentHsl.l);
+  const accent = rgbToHex(accentRgb.r, accentRgb.g, accentRgb.b);
+
+  // 3. Background: Very light version of base color (high lightness, lower saturation)
+  const backgroundHsl = { h: hsl.h, s: Math.max(10, hsl.s * 0.2), l: 95 };
+  const backgroundRgb = hslToRgb(backgroundHsl.h, backgroundHsl.s, backgroundHsl.l);
+  const background = rgbToHex(backgroundRgb.r, backgroundRgb.g, backgroundRgb.b);
+
+  // 4. Text: Dark color for readability (low lightness, low saturation)
+  const textHsl = { h: hsl.h, s: Math.min(15, hsl.s * 0.3), l: 15 };
+  const textRgb = hslToRgb(textHsl.h, textHsl.s, textHsl.l);
+  const text = rgbToHex(textRgb.r, textRgb.g, textRgb.b);
+
+  // 5. Secondary/Other: Analogous color (30° hue shift, slightly different lightness)
+  const secondaryHsl = {
+    h: (hsl.h + 30) % 360,
+    s: Math.max(40, Math.min(80, hsl.s)),
+    l: Math.max(35, Math.min(65, hsl.l + 10)),
+  };
+  const secondaryRgb = hslToRgb(secondaryHsl.h, secondaryHsl.s, secondaryHsl.l);
+  const secondary = rgbToHex(secondaryRgb.r, secondaryRgb.g, secondaryRgb.b);
+
+  return [
+    { hex: primary, label: 'Primary', role: 'primary' },
+    { hex: accent, label: 'Accent', role: 'accent' },
+    { hex: background, label: 'Light Background', role: 'background' },
+    { hex: text, label: 'Dark Text', role: 'text' },
+    { hex: secondary, label: 'Secondary', role: 'other' },
+  ];
+}

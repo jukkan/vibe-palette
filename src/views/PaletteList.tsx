@@ -6,8 +6,10 @@
  */
 
 import { useState, useRef } from 'react';
-import { VibePalette } from '../lib/paletteTypes';
+import { HexColorPicker } from 'react-colorful';
+import { VibePalette, VibeColor } from '../lib/paletteTypes';
 import { generateId, exportBackup, importBackup } from '../lib/storage';
+import { generatePaletteFromBase } from '../lib/colorUtils';
 import { useToast } from '../components/Toast';
 
 interface PaletteListProps {
@@ -20,37 +22,37 @@ interface PaletteListProps {
 export function PaletteList({ palettes, onSelectPalette, onCreatePalette, onRestoreBackup }: PaletteListProps) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [showNewPaletteModal, setShowNewPaletteModal] = useState(false);
   const { showToast } = useToast();
 
   const handleNewPalette = () => {
-    const now = new Date().toISOString();
+    setShowNewPaletteModal(true);
+  };
 
-    // Create a new empty palette (or clone the last one if it exists)
-    const lastPalette = palettes[palettes.length - 1];
+  const handleCreatePalette = (name: string, brand: string, description: string, baseColor: string) => {
+    const now = new Date().toISOString();
+    const generatedColors = generatePaletteFromBase(baseColor);
+
+    const colors: VibeColor[] = generatedColors.map((color) => ({
+      id: generateId(),
+      hex: color.hex,
+      label: color.label,
+      role: color.role,
+    }));
 
     const newPalette: VibePalette = {
       id: generateId(),
-      name: 'New Palette',
-      brand: lastPalette?.brand || '',
-      notes: '',
-      colors: lastPalette
-        ? lastPalette.colors.map((color) => ({
-            ...color,
-            id: generateId(),
-          }))
-        : [
-            {
-              id: generateId(),
-              hex: '#3B82F6',
-              label: 'Blue',
-              role: 'primary',
-            },
-          ],
+      name: name.trim(),
+      brand: brand.trim() || undefined,
+      notes: description.trim() || undefined,
+      colors,
       createdAt: now,
       updatedAt: now,
     };
 
     onCreatePalette(newPalette);
+    setShowNewPaletteModal(false);
+    showToast('Palette created!');
   };
 
   const handleImport = (jsonText: string) => {
@@ -199,6 +201,14 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette, onRest
         </div>
       )}
 
+      {/* New Palette Modal */}
+      {showNewPaletteModal && (
+        <NewPaletteModal
+          onClose={() => setShowNewPaletteModal(false)}
+          onCreate={handleCreatePalette}
+        />
+      )}
+
       {/* Import Modal */}
       {showImportModal && (
         <ImportModal
@@ -214,6 +224,173 @@ export function PaletteList({ palettes, onSelectPalette, onCreatePalette, onRest
           onRestore={handleRestore}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * New Palette Modal component
+ */
+function NewPaletteModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (name: string, brand: string, description: string, baseColor: string) => void;
+}) {
+  const [baseColor, setBaseColor] = useState('#3B82F6');
+  const [name, setName] = useState('');
+  const [brand, setBrand] = useState('');
+  const [description, setDescription] = useState('');
+
+  const generatedColors = generatePaletteFromBase(baseColor);
+
+  const handleCreate = () => {
+    if (!name.trim()) {
+      return;
+    }
+    onCreate(name, brand, description, baseColor);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="border-b px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Create New Palette</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="space-y-6">
+            {/* Base Color Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Base Color
+              </label>
+              <div className="flex gap-4 items-start">
+                <div className="flex-shrink-0">
+                  <HexColorPicker color={baseColor} onChange={setBaseColor} />
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={baseColor}
+                    onChange={(e) => setBaseColor(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
+                    placeholder="#RRGGBB"
+                  />
+                  <p className="text-sm text-gray-600 mb-3">
+                    Choose a base color to generate a harmonious 5-color palette. The palette will include:
+                  </p>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• Primary color (your selection)</li>
+                    <li>• Complementary accent color</li>
+                    <li>• Light background color</li>
+                    <li>• Dark text color</li>
+                    <li>• Analogous secondary color</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Generated Colors Preview */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Generated Palette Preview
+              </label>
+              <div className="grid grid-cols-5 gap-0 rounded-lg overflow-hidden shadow-md">
+                {generatedColors.map((color, index) => (
+                  <div
+                    key={index}
+                    className="aspect-square flex flex-col items-center justify-center p-3"
+                    style={{ backgroundColor: color.hex }}
+                  >
+                    <span className="text-xs font-mono text-white drop-shadow-md">
+                      {color.hex}
+                    </span>
+                    <span className="text-xs text-white drop-shadow-md mt-1">
+                      {color.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Palette Details */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Palette Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., Ocean Breeze"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Brand (optional)
+                </label>
+                <input
+                  type="text"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., My Brand"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="Add notes about this palette..."
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t px-6 py-4 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={!name.trim()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Create Palette
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

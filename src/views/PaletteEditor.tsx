@@ -227,7 +227,7 @@ export function PaletteEditor({
                   value={editedPalette.name}
                   onChange={(e) => updateField('name', e.target.value)}
                   className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  placeholder="e.g., FinModeler G3"
+                  placeholder="e.g., Ocean Breeze"
                 />
               </div>
 
@@ -238,7 +238,7 @@ export function PaletteEditor({
                   value={editedPalette.brand || ''}
                   onChange={(e) => updateField('brand', e.target.value)}
                   className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  placeholder="e.g., FinModeler"
+                  placeholder="e.g., My Brand"
                 />
               </div>
 
