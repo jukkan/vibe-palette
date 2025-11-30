@@ -1,5 +1,5 @@
 /**
- * localStorage utilities for Vibe Palettes
+ * localStorage utilities for Vibe Palette
  *
  * This module handles all localStorage operations for saving and loading palettes.
  * All data is stored under a single key: "vibe-palettes-v1"

@@ -1,4 +1,4 @@
-# Vibe Palettes
+# Vibe Palette
 
 A minimal, focused color palette manager for marketers and non-designers who need a simple tool to manage brand colors.
 
