@@ -423,7 +423,7 @@ function ColorRow({
               value={color.label || ''}
               onChange={(e) => onUpdate({ label: e.target.value })}
               className="flex-1 min-w-[80px] px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              placeholder="Label"
+              placeholder="Label (e.g., Blue)"
             />
           </div>
 
@@ -458,7 +458,7 @@ function ColorRow({
               Shades
             </button>
 
-            <div className="flex-1 min-w-[8px]" />
+            <div className="flex-1" /> {/* Spacer to push move/delete buttons to the right */}
 
             <button
               onClick={() => onMove('left')}
