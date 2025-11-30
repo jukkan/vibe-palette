@@ -21,7 +21,7 @@ export function generateId(): string {
 }
 
 /**
- * Creates the default example palette (FinModeler G3)
+ * Creates the default example palette
  */
 function createDefaultPalette(): VibePalette {
   const now = new Date().toISOString();
@@ -29,41 +29,41 @@ function createDefaultPalette(): VibePalette {
   const colors: VibeColor[] = [
     {
       id: generateId(),
-      hex: '#DDF247',
-      label: 'Lemon Lime',
-      role: 'accent',
-    },
-    {
-      id: generateId(),
-      hex: '#22262B',
-      label: 'Shadow Grey',
-      role: 'text',
-    },
-    {
-      id: generateId(),
-      hex: '#F2F2F2',
-      label: 'White Smoke',
-      role: 'background',
-    },
-    {
-      id: generateId(),
-      hex: '#2D6A4F',
-      label: 'Dark Emerald',
+      hex: '#3B82F6',
+      label: 'Primary',
       role: 'primary',
     },
     {
       id: generateId(),
-      hex: '#0077B6',
-      label: 'Bright Teal Blue',
+      hex: '#F97316',
+      label: 'Accent',
+      role: 'accent',
+    },
+    {
+      id: generateId(),
+      hex: '#F9FAFB',
+      label: 'Light Background',
+      role: 'background',
+    },
+    {
+      id: generateId(),
+      hex: '#1F2937',
+      label: 'Dark Text',
+      role: 'text',
+    },
+    {
+      id: generateId(),
+      hex: '#8B5CF6',
+      label: 'Secondary',
       role: 'other',
     },
   ];
 
   return {
     id: generateId(),
-    name: 'FinModeler G3',
-    brand: 'FinModeler',
-    notes: 'Default example palette - feel free to edit or delete!',
+    name: 'Example Palette',
+    brand: undefined,
+    notes: 'Example palette - feel free to edit or delete!',
     colors,
     createdAt: now,
     updatedAt: now,

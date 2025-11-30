@@ -29,10 +29,10 @@ export interface VibePalette {
   /** Unique identifier for this palette (UUID) */
   id: string;
 
-  /** Name of the palette (e.g., "FinModeler G3") */
+  /** Name of the palette (e.g., "Ocean Breeze") */
   name: string;
 
-  /** Optional brand/project name (e.g., "FinModeler") */
+  /** Optional brand/project name (e.g., "My Brand") */
   brand?: string;
 
   /** Optional notes or description */
